@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     t7 = str(video_folder / 'Bhujangasana/1_B.mp4')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
+    model_data = str(Path(__file__).resolve().parent / 'Model/model_v7.keras')
     model = load_model(model_data)
 
     cap = cv2.VideoCapture(t3_2)
@@ -160,7 +160,7 @@ if __name__ == "__main__":
                     frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
                     frame = cv2.circle(frame, (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), 4, clr, -1)
 
-                frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), clr, 1)
+                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), clr, 1)
                 if i == 6 or i == 8:            
                     angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
                     angle_ref = calculate_angle(points[i - 2], points[i], points[i + 1])

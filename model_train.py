@@ -12,10 +12,10 @@ import os
 
 
 if __name__ == "__main__":
-    dataset = str(Path(__file__).resolve().parent / 'Data/data_v6.csv')
+    dataset = str(Path(__file__).resolve().parent / 'Data/data_v7.csv')
     model_dir = str(Path(__file__).resolve().parent / 'Model')
 
-    model_save = os.path.join(model_dir, 'model_v6.keras')
+    model_save = os.path.join(model_dir, 'model_v7.keras')
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
