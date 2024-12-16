@@ -82,7 +82,8 @@ if __name__ == "__main__":
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v5.keras')
     model = load_model(model_data)
 
-    cap = cv2.VideoCapture(t3_2)
+    # cap = cv2.VideoCapture(t3_2)
+    cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
 
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     pose = mp_pose.Pose(enable_segmentation=False, model_complexity=1, min_detection_confidence=0.3, min_tracking_confidence=0.3)
 
 
-    ANGLE_THRESHOLD = 30
+    ANGLE_THRESHOLD = 10
 
     predictions = ['Hasta Uttanasan', 'Panchim Uttanasan', 'Vrikshasana', 'Vajrasana', 'Taadasana', 'Padmasana', 'Bhujangasana']
     DEBOUNCE_TIME = 2
@@ -115,6 +116,7 @@ if __name__ == "__main__":
 
     while cap.isOpened():
         ret, frame = cap.read()
+        frame = cv2.flip(frame, 1)
 
         if not ret:
             print("Can't receive frame (Video end?). Exiting ...")
