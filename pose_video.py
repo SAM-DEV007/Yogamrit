@@ -151,8 +151,8 @@ if __name__ == "__main__":
             for i in range(2, len(points_new) - 2):
                 clr = (255, 0, 0)
                 
-                angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 2])
-                angle_ref = calculate_angle(points[i - 2], points[i], points[i + 2])
+                angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + 2]))
+                angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + 2]))
 
                 if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
                     clr = (0, 0, 255)
