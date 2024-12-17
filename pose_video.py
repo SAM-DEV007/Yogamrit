@@ -105,9 +105,13 @@ if __name__ == "__main__":
     points_new_coll = [0 for _ in range(len(poses) + 1)]
 
     data = {}
-    with open(str(correction_folder / f'data_correction.csv'), 'r') as f:
+    data_flip = {}
+    with open(str(correction_folder / f'data_correction_v2.csv'), 'r') as f:
         reader = csv.reader(f)
         for row in reader:
+            if row[0] in data:
+                data_flip[row[0]] = [ast.literal_eval(i) for i in row[1:]]
+                continue
             data[row[0]] = [ast.literal_eval(i) for i in row[1:]]
 
     if not cap.isOpened():
@@ -147,14 +151,16 @@ if __name__ == "__main__":
 
             points_new = points_new_coll[1:-1]
             points = data[prev_text][1:-1]
+            points_flip = data_flip[prev_text][1:-1]
     
             for i in range(2, len(points_new) - 2):
                 clr = (255, 0, 0)
                 
                 angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + 2]))
                 angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + 2]))
+                angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + 2]))
 
-                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
+                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                     clr = (0, 0, 255)
 
                     frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
@@ -165,7 +171,7 @@ if __name__ == "__main__":
                     angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
                     angle_ref = calculate_angle(points[i - 2], points[i], points[i + 1])
 
-                    if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
+                    if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                         clr = (0, 0, 255)
 
                         frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
@@ -173,7 +179,7 @@ if __name__ == "__main__":
                         
                         frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
 
-                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
+                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
