@@ -98,7 +98,8 @@ if __name__ == "__main__":
 
     ANGLE_THRESHOLD = 10
     INCORRECT = 0
-    MIN_INCORRECT = 10
+    FRAME_COUNT = 0
+    MIN_INCORRECT = 3
     MIN_THRESHOLD = 10
     MAX_THRESHOLD = 30
     THRESHOLD_MULTIPLIER = 2
@@ -137,6 +138,8 @@ if __name__ == "__main__":
         if not ret:
             print("Can't receive frame (Video end?). Exiting ...")
             break
+
+        FRAME_COUNT += 1
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(frame_rgb)
@@ -198,13 +201,15 @@ if __name__ == "__main__":
                     INCORRECT += 1
         
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
-            if INCORRECT > MIN_INCORRECT:
+            actual_incorrect = INCORRECT / FRAME_COUNT
+            if actual_incorrect > MIN_INCORRECT:
                 ANGLE_THRESHOLD = min(MAX_THRESHOLD, ANGLE_THRESHOLD + THRESHOLD_MULTIPLIER)
             else:
                 ANGLE_THRESHOLD = max(MIN_THRESHOLD, ANGLE_THRESHOLD - THRESHOLD_MULTIPLIER)
             
             DEBOUNCE_THRESHOLD = time.time()
             INCORRECT = 0
+            FRAME_COUNT = 0
 
         if prev_text:
             cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
