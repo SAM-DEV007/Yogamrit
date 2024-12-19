@@ -79,13 +79,13 @@ if __name__ == "__main__":
 
     t7 = str(video_folder / 'Bhujangasana/1_B.mp4')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v7.keras')
+    model_data = str(Path(__file__).resolve().parent / 'Model/model_v5.keras')
     model = load_model(model_data)
 
-    cap = cv2.VideoCapture(t3_2)
-    #cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
+    #cap = cv2.VideoCapture(t3_2)
+    cap = cv2.VideoCapture(0)
+    #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
+    #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
 
 
     mp_pose = mp.solutions.pose
@@ -94,6 +94,13 @@ if __name__ == "__main__":
 
 
     ANGLE_THRESHOLD = 10
+    INCORRECT = 0
+    MIN_INCORRECT = 10
+    MIN_THRESHOLD = 10
+    MAX_THRESHOLD = 30
+    THRESHOLD_MULTIPLIER = 2
+    DEBOUNCE_THRESHOLD_TIME = 1
+    DEBOUNCE_THRESHOLD = 0
 
     predictions = ['Hasta Uttanasan', 'Panchim Uttanasan', 'Vrikshasana', 'Vajrasana', 'Taadasana', 'Padmasana', 'Bhujangasana']
     DEBOUNCE_TIME = 2
@@ -106,13 +113,15 @@ if __name__ == "__main__":
 
     data = {}
     data_flip = {}
-    with open(str(correction_folder / f'data_correction_v2.csv'), 'r') as f:
+    with open(str(correction_folder / f'data_correction_v3.csv'), 'r') as f:
         reader = csv.reader(f)
         for row in reader:
-            if row[0] in data:
-                data_flip[row[0]] = [ast.literal_eval(i) for i in row[1:]]
+            val = [ast.literal_eval(i) for i in row[1:-1]]
+
+            if int(row[-1]) == 1:
+                data_flip[row[0]] = val
                 continue
-            data[row[0]] = [ast.literal_eval(i) for i in row[1:]]
+            data[row[0]] = val
 
     if not cap.isOpened():
         print("Error: Could not open video.")
@@ -183,9 +192,21 @@ if __name__ == "__main__":
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
+                    INCORRECT += 1
+        
+        if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
+            if INCORRECT > MIN_INCORRECT:
+                ANGLE_THRESHOLD = min(MAX_THRESHOLD, ANGLE_THRESHOLD + THRESHOLD_MULTIPLIER)
+            else:
+                ANGLE_THRESHOLD = max(MIN_THRESHOLD, ANGLE_THRESHOLD - THRESHOLD_MULTIPLIER)
+            
+            DEBOUNCE_THRESHOLD = time.time()
+            INCORRECT = 0
+
         if prev_text:
             cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Video', frame)
 
