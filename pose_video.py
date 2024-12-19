@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     t7 = str(video_folder / 'Bhujangasana/1_B.mp4')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v5.keras')
+    model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
     #cap = cv2.VideoCapture(t3_2)

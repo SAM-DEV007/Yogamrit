@@ -12,10 +12,10 @@ import os
 
 
 if __name__ == "__main__":
-    dataset = str(Path(__file__).resolve().parent / 'Data/data_v7.csv')
+    dataset = str(Path(__file__).resolve().parent / 'Data/data_v6.csv')
     model_dir = str(Path(__file__).resolve().parent / 'Model')
 
-    model_save = os.path.join(model_dir, 'model_v7.keras')
+    model_save = os.path.join(model_dir, 'model_v6.keras')
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -45,13 +45,13 @@ if __name__ == "__main__":
     history = model.fit(
         x_train,
         y_train,
-        epochs=50,
-        batch_size=64,
+        epochs=20,
+        batch_size=32,
         validation_data=(x_test, y_test),
         callbacks=[cp_callback, es_callback]
     )
 
-    val_loss, val_acc = model.evaluate(x_test, y_test, batch_size=64)
+    val_loss, val_acc = model.evaluate(x_test, y_test, batch_size=32)
     print(f"Validation Loss: {val_loss}, Validation Accuracy: {val_acc}")
 
     plt.subplot(1, 2, 1)
