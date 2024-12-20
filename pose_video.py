@@ -4,6 +4,7 @@ import time
 import itertools
 import csv
 import ast
+import threading
 
 import mediapipe as mp
 import tensorflow as tf
@@ -11,6 +12,7 @@ import numpy as np
 
 from tensorflow.keras.models import load_model
 from pathlib import Path
+from playsound import playsound
 
 
 def calculate_angle(a, b, c):
@@ -63,9 +65,15 @@ def landmark_list(frame, pose):
     return preprocess_data(landmarks)
 
 
+def play_audio(audio_file):
+    new_thread = threading.Thread(target=playsound, args=(audio_file,))
+    new_thread.start()
+
+
 if __name__ == "__main__":
     correction_folder = Path(__file__).resolve().parent / 'Correction_Data'
     video_folder = Path(__file__).resolve().parent / 'Tests/Video'
+    audio_folder = Path(__file__).resolve().parent / 'Audio'
 
     v1 = str(video_folder / 'Hasta Uttanasan/1_HU.mp4')
     v2 = str(video_folder / 'Panchim Uttanasan/1_PU.mp4')
@@ -79,11 +87,14 @@ if __name__ == "__main__":
 
     t7 = str(video_folder / 'Bhujangasana/1_B.mp4')
 
+    audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
+    audio_high = str(audio_folder / 'High_Error_Beep.mp3')
+
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
-    #cap = cv2.VideoCapture(t3_2)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(t3_2)
+    #cap = cv2.VideoCapture(0)
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
 
@@ -111,6 +122,12 @@ if __name__ == "__main__":
     debounce = 0
     prev_text = None
     perform_detect = True
+
+    incorrect_points = {}
+    debounce_time_points = 3
+    debounce_points = 0
+    max_points_incorrect = 10
+    warn = False
 
     poses = ('NOSE', 'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_ELBOW', 'RIGHT_ELBOW', 'LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE', 'LEFT_ANKLE', 'RIGHT_ANKLE', 'LEFT_FOOT_INDEX', 'RIGHT_FOOT_INDEX')
     points_new_coll = [0 for _ in range(len(poses) + 1)]
@@ -167,7 +184,7 @@ if __name__ == "__main__":
             points_new = points_new_coll[1:-1]
             points = data[prev_text][1:-1]
             points_flip = data_flip[prev_text][1:-1]
-    
+
             for i in range(2, len(points_new) - 2):
                 clr = (255, 0, 0)
                 
@@ -199,6 +216,24 @@ if __name__ == "__main__":
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
                     INCORRECT += 1
+                    if i not in incorrect_points:
+                        incorrect_points[i] = 1
+                    else:
+                        incorrect_points[i] += 1
+            
+            if incorrect_points and not warn:
+                play_audio(audio_low)
+
+                debounce_points = time.time()
+                warn = True
+            
+            if (time.time() - debounce_points) > debounce_time_points and warn:
+                if max(incorrect_points.values()) > max_points_incorrect:
+                    play_audio(audio_high)
+
+                debounce_points = time.time()
+                incorrect_points = {}
+                warn = False
         
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
             actual_incorrect = INCORRECT / FRAME_COUNT
