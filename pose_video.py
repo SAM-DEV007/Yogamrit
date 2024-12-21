@@ -124,9 +124,11 @@ if __name__ == "__main__":
     perform_detect = True
 
     incorrect_points = {}
-    debounce_time_points = 3
+    debounce_time_points = 5
     debounce_points = 0
-    max_points_incorrect = 10
+    max_points_incorrect = debounce_time_points * 5
+    low_warn_dobounce = 0
+    low_warn_debounce_time = 2
     warn = False
 
     poses = ('NOSE', 'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_ELBOW', 'RIGHT_ELBOW', 'LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE', 'LEFT_ANKLE', 'RIGHT_ANKLE', 'LEFT_FOOT_INDEX', 'RIGHT_FOOT_INDEX')
@@ -216,22 +218,25 @@ if __name__ == "__main__":
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
                     INCORRECT += 1
-                    if i not in incorrect_points:
-                        incorrect_points[i] = 1
-                    else:
-                        incorrect_points[i] += 1
+                    if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
+                        if i not in incorrect_points:
+                            incorrect_points[i] = 1
+                        else:
+                            incorrect_points[i] += 1
             
             if incorrect_points and not warn:
-                play_audio(audio_low)
+                if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
+                    play_audio(audio_low)
 
-                debounce_points = time.time()
-                warn = True
+                    debounce_points = time.time()
+                    warn = True
             
             if (time.time() - debounce_points) > debounce_time_points and warn:
                 if max(incorrect_points.values()) > max_points_incorrect:
                     play_audio(audio_high)
 
                 debounce_points = time.time()
+                low_warn_dobounce = time.time()
                 incorrect_points = {}
                 warn = False
         
