@@ -123,6 +123,7 @@ if __name__ == "__main__":
     prev_text = None
     perform_detect = True
 
+    audio_perm = True
     incorrect_points = {}
     debounce_time_points = 5
     debounce_points = 0
@@ -218,27 +219,31 @@ if __name__ == "__main__":
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
                     INCORRECT += 1
-                    if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
-                        if i not in incorrect_points:
-                            incorrect_points[i] = 1
-                        else:
-                            incorrect_points[i] += 1
+
+                    if audio_perm:
+                        if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
+                            if i not in incorrect_points:
+                                incorrect_points[i] = 1
+                            else:
+                                incorrect_points[i] += 1
             
-            if incorrect_points and not warn:
-                if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
-                    play_audio(audio_low)
+            if audio_perm:
+                if incorrect_points and not warn:
+                    if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
+                        play_audio(audio_low)
+
+                        debounce_points = time.time()
+                        warn = True
+            
+            if audio_perm:
+                if (time.time() - debounce_points) > debounce_time_points and warn:
+                    if max(incorrect_points.values()) > max_points_incorrect:
+                        play_audio(audio_high)
 
                     debounce_points = time.time()
-                    warn = True
-            
-            if (time.time() - debounce_points) > debounce_time_points and warn:
-                if max(incorrect_points.values()) > max_points_incorrect:
-                    play_audio(audio_high)
-
-                debounce_points = time.time()
-                low_warn_dobounce = time.time()
-                incorrect_points = {}
-                warn = False
+                    low_warn_dobounce = time.time()
+                    incorrect_points = {}
+                    warn = False
         
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
             actual_incorrect = INCORRECT / FRAME_COUNT
@@ -255,13 +260,21 @@ if __name__ == "__main__":
             cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Video', frame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        end = cv2.waitKey(1)
+        if end & 0xFF == ord('a'):
+            audio_perm = not audio_perm
+            if audio_perm:
+                incorrect_points = {}
+                debounce_points = 0
+                low_warn_dobounce = 0
+                warn = False
+        elif end & 0xFF == ord('q'):
             break
-
-        if cv2.waitKey(1) == 27:
+        elif end == 27:
             break
 
         if cv2.getWindowProperty('Video', cv2.WND_PROP_VISIBLE) < 1:
