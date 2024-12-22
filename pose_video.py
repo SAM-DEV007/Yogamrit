@@ -132,6 +132,8 @@ if __name__ == "__main__":
     low_warn_debounce_time = 2
     warn = False
 
+    show_all_points = True
+
     poses = ('NOSE', 'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_ELBOW', 'RIGHT_ELBOW', 'LEFT_SHOULDER', 'RIGHT_SHOULDER', 'LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE', 'LEFT_ANKLE', 'RIGHT_ANKLE', 'LEFT_FOOT_INDEX', 'RIGHT_FOOT_INDEX')
     points_new_coll = [0 for _ in range(len(poses) + 1)]
 
@@ -195,6 +197,12 @@ if __name__ == "__main__":
                 angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + 2]))
                 angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + 2]))
 
+                if show_all_points:
+                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
+                    frame = cv2.circle(frame, (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), 4, clr, -1)
+
+                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), clr, 1)
+
                 if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                     clr = (0, 0, 255)
 
@@ -206,6 +214,12 @@ if __name__ == "__main__":
                     angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
                     angle_ref = calculate_angle(points[i - 2], points[i], points[i + 1])
 
+                    if show_all_points:
+                        frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
+                        frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
+                        
+                        frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
+
                     if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                         clr = (0, 0, 255)
 
@@ -213,6 +227,10 @@ if __name__ == "__main__":
                         frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
                         
                         frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
+
+                if show_all_points:
+                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
+                    frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
                 if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
@@ -261,6 +279,7 @@ if __name__ == "__main__":
         cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'Show all points: {show_all_points}', (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Video', frame)
 
@@ -274,6 +293,8 @@ if __name__ == "__main__":
                 warn = False
         elif end & 0xFF == ord('q'):
             break
+        elif end & 0xFF == ord('p'):
+            show_all_points = not show_all_points
         elif end == 27:
             break
 
