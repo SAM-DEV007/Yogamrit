@@ -270,6 +270,30 @@ if __name__ == "__main__":
             points = data[prev_text][1:-1]
             points_flip = data_flip[prev_text][1:-1]
 
+            non_flip, flip = 0, 0
+            new, ref, ref_flip = [], [], []
+            for i in range(2, len(points_new) - 2):
+                av = 2
+                if i == 6 or i == 8:
+                    av = 1
+
+                angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
+                angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
+                angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))
+
+                new.append(angle_new)
+                ref.append(angle_ref)
+                ref_flip.append(angle_ref_flip)
+
+                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
+                    non_flip += abs(angle_new - angle_ref)
+                if abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                    flip += abs(angle_new - angle_ref_flip)
+            
+            use_flip = False
+            if non_flip > flip: # Use the one with the least error
+                use_flip = True
+
             accuracy_history.append([len(points_new), 0, 0])
             for i in range(2, len(points_new) - 2):
                 av = 2
@@ -278,9 +302,14 @@ if __name__ == "__main__":
 
                 clr = (0, 255, 0) # Green
                 
-                angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
-                angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
-                angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))
+                #angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
+                '''angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
+                angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))'''
+
+                #angle = (round(calculate_angle(points[i - 2], points[i], points[i + av])), round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av])))[use_flip]
+
+                angle_new = new[i - 2]
+                angle = (ref[i - 2], ref_flip[i - 2])[use_flip]
 
                 if show_all_points:
                     frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
@@ -288,8 +317,10 @@ if __name__ == "__main__":
 
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + av][0] * frame.shape[1]), int(points_new[i + av][1] * frame.shape[0])), clr, 1)
 
-                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                    min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
+                #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                if abs(angle_new - angle) > ANGLE_THRESHOLD:
+                    #min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
+                    min_dev = abs(angle_new - angle)
 
                     if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
                         clr = (0, 0, 255) # Red
@@ -331,7 +362,8 @@ if __name__ == "__main__":
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
-                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                if abs(angle_new - angle) > ANGLE_THRESHOLD:
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
                     frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
 
