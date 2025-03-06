@@ -312,10 +312,10 @@ if __name__ == "__main__":
                 angle = (ref[i - 2], ref_flip[i - 2])[use_flip]
 
                 if show_all_points:
-                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
-                    frame = cv2.circle(frame, (int(points_new[i + av][0] * frame.shape[1]), int(points_new[i + av][1] * frame.shape[0])), 4, clr, -1)
+                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), 4, clr, -1)
+                    frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
 
-                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + av][0] * frame.shape[1]), int(points_new[i + av][1] * frame.shape[0])), clr, 1)
+                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
 
                 #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                 if abs(angle_new - angle) > ANGLE_THRESHOLD:
@@ -329,10 +329,10 @@ if __name__ == "__main__":
                         clr = (0, 255, 255) # Yellow
                         accuracy_history[-1][2] += 1
 
-                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
-                    frame = cv2.circle(frame, (int(points_new[i + av][0] * frame.shape[1]), int(points_new[i + av][1] * frame.shape[0])), 4, clr, -1)
+                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), 4, clr, -1)
+                    frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
 
-                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + av][0] * frame.shape[1]), int(points_new[i + av][1] * frame.shape[0])), clr, 1)
+                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
                     
                 '''if i == 6 or i == 8:            
                     angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
@@ -359,13 +359,13 @@ if __name__ == "__main__":
                         frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)'''
 
                 if show_all_points:
-                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
-                    frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
+                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
+                    frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
 
                 #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                 if abs(angle_new - angle) > ANGLE_THRESHOLD:
-                    frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), clr, 1)
-                    frame = cv2.circle(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), 4, clr, -1)
+                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
+                    frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
 
                     INCORRECT += 1
 
