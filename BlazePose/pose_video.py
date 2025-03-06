@@ -409,6 +409,43 @@ if __name__ == "__main__":
                         incorrect_points = {}
                         warn = False'''
         
+        if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
+            actual_incorrect = INCORRECT / FRAME_COUNT
+            if actual_incorrect > MIN_INCORRECT:
+                ANGLE_THRESHOLD = min(MAX_THRESHOLD, ANGLE_THRESHOLD + THRESHOLD_MULTIPLIER)
+            else:
+                ANGLE_THRESHOLD = max(MIN_THRESHOLD, ANGLE_THRESHOLD - THRESHOLD_MULTIPLIER)
+            
+            DEBOUNCE_THRESHOLD = time.time()
+            INCORRECT = 0
+            FRAME_COUNT = 0
+
+        if AUTOMATIC_CROP:
+            if abs(min_x - max_x) > 0 and abs(min_y - max_y) > 0:
+                cropped_frame = frame[int(min_y):int(max_y), int(min_x):int(max_x)]
+
+                orig_h, orig_w = cropped_frame.shape[:2]
+                target_w, target_h = width, height
+
+                scale = min(target_w / orig_w, target_h / orig_h)
+
+                new_w = int(orig_w * scale)
+                new_h = int(orig_h * scale)
+
+                padded_size = 300
+
+                final_w = max(target_w, new_w + padded_size)
+
+                resized_frame = cv2.resize(cropped_frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                padded_frame = np.ones((target_h, final_w, 3), dtype=np.uint8) * 255
+
+                #x_offset = (target_w - new_w) // 2
+                x_offset = padded_size
+                y_offset = (target_h - new_h) // 2
+
+                padded_frame[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_frame
+                frame = padded_frame
+
         if accuracy_history:
             accuracy_history = accuracy_history[-PLOT_COUNT_THRESHOLD:]
             accuracy = calculate_accuracy(accuracy_history, weight=WARNING_ACCURACY_THRESHOLD)
@@ -431,17 +468,6 @@ if __name__ == "__main__":
 
             frame[plot_y:plot_y+new_plot_height, plot_x:plot_x+PLOT_SIZE] = plot_resized
             frame[pie_y:pie_y+new_pie_height, pie_x:pie_x+PLOT_SIZE] = pie_resized
-        
-        if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
-            actual_incorrect = INCORRECT / FRAME_COUNT
-            if actual_incorrect > MIN_INCORRECT:
-                ANGLE_THRESHOLD = min(MAX_THRESHOLD, ANGLE_THRESHOLD + THRESHOLD_MULTIPLIER)
-            else:
-                ANGLE_THRESHOLD = max(MIN_THRESHOLD, ANGLE_THRESHOLD - THRESHOLD_MULTIPLIER)
-            
-            DEBOUNCE_THRESHOLD = time.time()
-            INCORRECT = 0
-            FRAME_COUNT = 0
 
         if prev_text:
             cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
@@ -451,28 +477,6 @@ if __name__ == "__main__":
         #cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.putText(frame, f'Show all points: {show_all_points} (P)', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
-
-        if AUTOMATIC_CROP:
-            if abs(min_x - max_x) > 0 and abs(min_y - max_y) > 0:
-                cropped_frame = frame[int(min_y):int(max_y), int(min_x):int(max_x)]
-
-
-                orig_h, orig_w = cropped_frame.shape[:2]
-                target_w, target_h = width, height
-
-                scale = min(target_w / orig_w, target_h / orig_h)
-
-                new_w = int(orig_w * scale)
-                new_h = int(orig_h * scale)
-
-                resized_frame = cv2.resize(cropped_frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                padded_frame = np.ones((target_h, target_w, 3), dtype=np.uint8) * 255
-
-                x_offset = (target_w - new_w) // 2
-                y_offset = (target_h - new_h) // 2
-
-                padded_frame[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_frame
-                frame = padded_frame
 
         cv2.imshow('Video', frame)
 
