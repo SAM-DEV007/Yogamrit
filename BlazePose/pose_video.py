@@ -9,6 +9,7 @@ import threading
 import mediapipe as mp
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
 
 from tensorflow.keras.models import load_model
 from pathlib import Path
@@ -70,6 +71,67 @@ def play_audio(audio_file):
     new_thread.start()
 
 
+def calculate_accuracy(accuracy_history, weight=0.1):
+    accuracy = [((accuracy_history[i][0] - accuracy_history[i][1] - (accuracy_history[i][2] * weight)) / accuracy_history[i][0]) * 100 for i in range(len(accuracy_history))]
+    return accuracy
+
+
+def create_pie_chart(accuracy_history):
+    accuracy_history = np.array(accuracy_history)
+
+    red_sum = np.sum(accuracy_history[:, 1])
+    yellow_sum = np.sum(accuracy_history[:, 2])
+    green_sum = np.sum(accuracy_history[:, 0]) - red_sum - yellow_sum
+
+    sums = [red_sum, yellow_sum, green_sum]
+    colors = ['r', 'y', 'g']
+    labels = ['Flawed', 'Imperfect', 'Accurate']
+
+    filtered_data = [(s, c, l) for s, c, l in zip(sums, colors, labels) if s > 0]
+    sums, colors, labels = zip(*filtered_data) if filtered_data else ([], [], [])
+
+    plt.title('Pose Distribution')
+    plt.pie(sums, colors=colors, labels=labels)
+    fig.canvas.draw()
+
+    pie = np.frombuffer(fig.canvas.get_renderer().buffer_rgba(), dtype=np.uint8)
+
+    width, height = fig.canvas.get_width_height()
+    pie = pie.reshape((height, width, 4))
+    pie = cv2.cvtColor(pie, cv2.COLOR_RGBA2BGR)
+
+    fig.clf()
+
+    return pie
+
+
+def create_line_plot(accuracy):
+    plt.plot(accuracy)
+    plt.title('Accuracy')
+
+    plt.xlabel('Time')
+    plt.ylabel('Accuracy (%)')
+
+    plt.yticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+
+    ax = plt.gca()
+    ax.set_xticks([])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    fig.canvas.draw()
+
+    plot = np.frombuffer(fig.canvas.get_renderer().buffer_rgba(), dtype=np.uint8)
+
+    width, height = fig.canvas.get_width_height()
+    plot = plot.reshape((height, width, 4))
+    plot = cv2.cvtColor(plot, cv2.COLOR_RGBA2BGR)
+
+    fig.clf()
+
+    return plot
+
+
 if __name__ == "__main__":
     correction_folder = Path(__file__).resolve().parent / 'Correction_Data'
     video_folder = Path(__file__).resolve().parent.parent / 'Tests/Video'
@@ -93,7 +155,9 @@ if __name__ == "__main__":
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
-    cap = cv2.VideoCapture(t3_2)
+    fig = plt.figure()
+
+    cap = cv2.VideoCapture(t3_1)
     #cap = cv2.VideoCapture(0)
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
@@ -108,7 +172,7 @@ if __name__ == "__main__":
 
 
     ANGLE_THRESHOLD = 15
-    INCORRECT_ANGLE_THRESHOLD = 50
+    INCORRECT_ANGLE_THRESHOLD = 30
     INCORRECT = 0
     FRAME_COUNT = 0
     MIN_INCORRECT = 3
@@ -118,6 +182,9 @@ if __name__ == "__main__":
     DEBOUNCE_THRESHOLD_TIME = 1
     DEBOUNCE_THRESHOLD = 0
 
+    PLOT_COUNT_THRESHOLD = 50
+    WARNING_ACCURACY_THRESHOLD = 0.25
+
     _predict = None
     PREDICT_THRESHOLD = 0.8
     predictions = ['Hasta Uttanasan', 'Panchim Uttanasan', 'Vrikshasana', 'Vajrasana', 'Taadasana', 'Padmasana', 'Bhujangasana']
@@ -125,6 +192,9 @@ if __name__ == "__main__":
     debounce = 0
     prev_text = None
     perform_detect = True
+
+    accuracy_history = []
+    accuracy = []
 
     '''audio_perm = True
     incorrect_points = {}
@@ -159,6 +229,8 @@ if __name__ == "__main__":
     while cap.isOpened():
         ret, frame = cap.read()
         frame = cv2.flip(frame, 1)
+
+        height, width, _ = frame.shape
 
         if not ret:
             print("Can't receive frame (Video end?). Exiting ...")
@@ -197,6 +269,7 @@ if __name__ == "__main__":
             points = data[prev_text][1:-1]
             points_flip = data_flip[prev_text][1:-1]
 
+            accuracy_history.append([len(points_new), 0, 0])
             for i in range(2, len(points_new) - 2):
                 av = 2
                 if i == 6 or i == 8:
@@ -219,8 +292,10 @@ if __name__ == "__main__":
 
                     if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
                         clr = (0, 0, 255) # Red
+                        accuracy_history[-1][1] += 1
                     else:
                         clr = (0, 255, 255) # Yellow
+                        accuracy_history[-1][2] += 1
 
                     frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
                     frame = cv2.circle(frame, (int(points_new[i + av][0] * frame.shape[1]), int(points_new[i + av][1] * frame.shape[0])), 4, clr, -1)
@@ -285,6 +360,25 @@ if __name__ == "__main__":
                     incorrect_points = {}
                     warn = False'''
         
+        if accuracy_history:
+            accuracy_history = accuracy_history[-PLOT_COUNT_THRESHOLD:]
+            accuracy = calculate_accuracy(accuracy_history, weight=WARNING_ACCURACY_THRESHOLD)
+
+            pie = create_pie_chart(accuracy_history)
+            plot = create_line_plot(accuracy)
+
+            pie_height, pie_width, _ = pie.shape
+            plot_height, plot_width, _ = plot.shape
+
+            new_plot_width = int(plot_width * (height / plot_height))
+            plot_resized = cv2.resize(plot, (new_plot_width, height), interpolation=cv2.INTER_AREA)
+
+            new_pie_width = int(pie_width * (height / pie_height))
+            pie_resized = cv2.resize(pie, (new_pie_width, height), interpolation=cv2.INTER_AREA)
+
+            frame = np.hstack([frame, plot_resized])
+            frame = np.hstack([frame, pie_resized])
+        
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
             actual_incorrect = INCORRECT / FRAME_COUNT
             if actual_incorrect > MIN_INCORRECT:
@@ -298,6 +392,8 @@ if __name__ == "__main__":
 
         if prev_text:
             cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
+        if accuracy:
+            cv2.putText(frame, f'Accuracy: {sum(accuracy) / len(accuracy)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
