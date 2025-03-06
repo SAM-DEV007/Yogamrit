@@ -118,8 +118,10 @@ if __name__ == "__main__":
     DEBOUNCE_THRESHOLD_TIME = 1
     DEBOUNCE_THRESHOLD = 0
 
+    _predict = None
+    PREDICT_THRESHOLD = 0.8
     predictions = ['Hasta Uttanasan', 'Panchim Uttanasan', 'Vrikshasana', 'Vajrasana', 'Taadasana', 'Padmasana', 'Bhujangasana']
-    DEBOUNCE_TIME = 2
+    DEBOUNCE_TIME = 1
     debounce = 0
     prev_text = None
     perform_detect = True
@@ -182,10 +184,14 @@ if __name__ == "__main__":
                 perform_detect = False
 
                 norm = landmark_list(frame, points_new_coll)
-                _predict = model.predict(np.array([norm]))
-                _predict = np.argmax(np.squeeze(_predict))
+                predict_model = np.squeeze(model.predict(np.array([norm]), verbose=0))
+                prediction = np.argmax(predict_model)
+                
+                if predict_model[prediction] > PREDICT_THRESHOLD:
+                    _predict = prediction
 
-                prev_text = predictions[_predict]
+                if _predict:
+                    prev_text = predictions[_predict]
 
             points_new = points_new_coll[1:-1]
             points = data[prev_text][1:-1]
