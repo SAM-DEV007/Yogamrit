@@ -155,8 +155,6 @@ if __name__ == "__main__":
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
-    fig = plt.figure()
-
     cap = cv2.VideoCapture(t3_1)
     #cap = cv2.VideoCapture(0)
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
@@ -182,8 +180,10 @@ if __name__ == "__main__":
     DEBOUNCE_THRESHOLD_TIME = 1
     DEBOUNCE_THRESHOLD = 0
 
+    fig = plt.figure()
     PLOT_COUNT_THRESHOLD = 50
     WARNING_ACCURACY_THRESHOLD = 0.25
+    PLOT_SIZE = 150
 
     _predict = None
     PREDICT_THRESHOLD = 0.8
@@ -230,12 +230,11 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         frame = cv2.flip(frame, 1)
 
-        height, width, _ = frame.shape
-
         if not ret:
             print("Can't receive frame (Video end?). Exiting ...")
             break
 
+        height, width, _ = frame.shape
         FRAME_COUNT += 1
 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -370,14 +369,18 @@ if __name__ == "__main__":
             pie_height, pie_width, _ = pie.shape
             plot_height, plot_width, _ = plot.shape
 
-            new_plot_width = int(plot_width * (height / plot_height))
-            plot_resized = cv2.resize(plot, (new_plot_width, height), interpolation=cv2.INTER_AREA)
+            new_plot_height = int(plot_height * (PLOT_SIZE / plot_width))
+            plot_resized = cv2.resize(plot, (PLOT_SIZE, new_plot_height), interpolation=cv2.INTER_AREA)
 
-            new_pie_width = int(pie_width * (height / pie_height))
-            pie_resized = cv2.resize(pie, (new_pie_width, height), interpolation=cv2.INTER_AREA)
+            new_pie_height = int(pie_height * (PLOT_SIZE / pie_width))
+            pie_resized = cv2.resize(pie, (PLOT_SIZE, new_pie_height), interpolation=cv2.INTER_AREA)
 
-            frame = np.hstack([frame, plot_resized])
-            frame = np.hstack([frame, pie_resized])
+            padding = 10
+            plot_x, plot_y = padding, frame.shape[0] - new_plot_height - new_pie_height - 2 * padding
+            pie_x, pie_y = padding, plot_y + new_plot_height + padding
+
+            frame[plot_y:plot_y+new_plot_height, plot_x:plot_x+PLOT_SIZE] = plot_resized
+            frame[pie_y:pie_y+new_pie_height, pie_x:pie_x+PLOT_SIZE] = pie_resized
         
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
             actual_incorrect = INCORRECT / FRAME_COUNT
