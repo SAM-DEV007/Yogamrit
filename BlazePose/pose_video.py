@@ -165,7 +165,6 @@ if __name__ == "__main__":
     #cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
     #cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-
     mp_pose = mp.solutions.pose
     mp_drawing = mp.solutions.drawing_utils
     pose = mp_pose.Pose(enable_segmentation=False, model_complexity=1, min_detection_confidence=0.3, min_tracking_confidence=0.3)
@@ -282,132 +281,133 @@ if __name__ == "__main__":
                 if _predict:
                     prev_text = predictions[_predict]
 
-            points_new = points_new_coll[1:-1]
-            points = data[prev_text][1:-1]
-            points_flip = data_flip[prev_text][1:-1]
+            if prev_text:
+                points_new = points_new_coll[1:-1]
+                points = data[prev_text][1:-1]
+                points_flip = data_flip[prev_text][1:-1]
 
-            non_flip, flip = 0, 0
-            new, ref, ref_flip = [], [], []
-            for i in range(2, len(points_new) - 2):
-                av = 2
-                if i == 6 or i == 8:
-                    av = 1
+                non_flip, flip = 0, 0
+                new, ref, ref_flip = [], [], []
+                for i in range(2, len(points_new) - 2):
+                    av = 2
+                    if i == 6 or i == 8:
+                        av = 1
 
-                angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
-                angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
-                angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))
+                    angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
+                    angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
+                    angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))
 
-                new.append(angle_new)
-                ref.append(angle_ref)
-                ref_flip.append(angle_ref_flip)
+                    new.append(angle_new)
+                    ref.append(angle_ref)
+                    ref_flip.append(angle_ref_flip)
 
-                if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
-                    non_flip += abs(angle_new - angle_ref)
-                if abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                    flip += abs(angle_new - angle_ref_flip)
-            
-            use_flip = False
-            if non_flip > flip: # Use the one with the least error
-                use_flip = True
-
-            accuracy_history.append([len(points_new), 0, 0])
-            for i in range(2, len(points_new) - 2):
-                av = 2
-                if i == 6 or i == 8:
-                    av = 1
-
-                clr = (0, 255, 0) # Green
+                    if abs(angle_new - angle_ref) > ANGLE_THRESHOLD:
+                        non_flip += abs(angle_new - angle_ref)
+                    if abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                        flip += abs(angle_new - angle_ref_flip)
                 
-                #angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
-                '''angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
-                angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))'''
+                use_flip = False
+                if non_flip > flip: # Use the one with the least error
+                    use_flip = True
 
-                #angle = (round(calculate_angle(points[i - 2], points[i], points[i + av])), round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av])))[use_flip]
+                accuracy_history.append([len(points_new), 0, 0])
+                for i in range(2, len(points_new) - 2):
+                    av = 2
+                    if i == 6 or i == 8:
+                        av = 1
 
-                angle_new = new[i - 2]
-                angle = (ref[i - 2], ref_flip[i - 2])[use_flip]
-
-                if show_all_points:
-                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), 4, clr, -1)
-                    frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
-
-                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
-
-                #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                if abs(angle_new - angle) > ANGLE_THRESHOLD:
-                    #min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
-                    min_dev = abs(angle_new - angle)
-
-                    if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
-                        clr = (0, 0, 255) # Red
-                        accuracy_history[-1][1] += 1
-                    else:
-                        clr = (0, 255, 255) # Yellow
-                        accuracy_history[-1][2] += 1
-
-                    frame = cv2.circle(frame, (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), 4, clr, -1)
-                    frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
-
-                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
+                    clr = (0, 255, 0) # Green
                     
-                '''if i == 6 or i == 8:            
-                    angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
-                    angle_ref = calculate_angle(points[i - 2], points[i], points[i + 1])
-                    angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + 1]))
+                    #angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
+                    '''angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
+                    angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))'''
+
+                    #angle = (round(calculate_angle(points[i - 2], points[i], points[i + av])), round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av])))[use_flip]
+
+                    angle_new = new[i - 2]
+                    angle = (ref[i - 2], ref_flip[i - 2])[use_flip]
 
                     if show_all_points:
-                        frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
-                        frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
-                        
-                        frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
+                        frame = cv2.circle(frame, (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), 4, clr, -1)
+                        frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
 
-                    if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                        min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
+                        frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
+
+                    #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                    if abs(angle_new - angle) > ANGLE_THRESHOLD:
+                        #min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
+                        min_dev = abs(angle_new - angle)
 
                         if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
                             clr = (0, 0, 255) # Red
+                            accuracy_history[-1][1] += 1
                         else:
                             clr = (0, 255, 255) # Yellow
+                            accuracy_history[-1][2] += 1
 
-                        frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
-                        frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
+                        frame = cv2.circle(frame, (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), 4, clr, -1)
+                        frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
+
+                        frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
                         
-                        frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)'''
+                    '''if i == 6 or i == 8:            
+                        angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
+                        angle_ref = calculate_angle(points[i - 2], points[i], points[i + 1])
+                        angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + 1]))
 
-                if show_all_points:
-                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
-                    frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
+                        if show_all_points:
+                            frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
+                            frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
+                            
+                            frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
 
-                #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                if abs(angle_new - angle) > ANGLE_THRESHOLD:
-                    frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
-                    frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
+                        if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                            min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
 
-                    INCORRECT += 1
-
-                    '''if audio_perm:
-                        if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
-                            if i not in incorrect_points:
-                                incorrect_points[i] = 1
+                            if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
+                                clr = (0, 0, 255) # Red
                             else:
-                                incorrect_points[i] += 1'''
-            
-            '''if audio_perm:
-                if incorrect_points and not warn:
-                    if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
-                        play_audio(audio_low)
+                                clr = (0, 255, 255) # Yellow
+
+                            frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
+                            frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
+                            
+                            frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)'''
+
+                    if show_all_points:
+                        frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
+                        frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
+
+                    #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
+                    if abs(angle_new - angle) > ANGLE_THRESHOLD:
+                        frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
+                        frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
+
+                        INCORRECT += 1
+
+                        '''if audio_perm:
+                            if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
+                                if i not in incorrect_points:
+                                    incorrect_points[i] = 1
+                                else:
+                                    incorrect_points[i] += 1'''
+                
+                '''if audio_perm:
+                    if incorrect_points and not warn:
+                        if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
+                            play_audio(audio_low)
+
+                            debounce_points = time.time()
+                            warn = True
+
+                    if (time.time() - debounce_points) > debounce_time_points and warn:
+                        if max(incorrect_points.values()) > max_points_incorrect:
+                            play_audio(audio_high)
 
                         debounce_points = time.time()
-                        warn = True
-
-                if (time.time() - debounce_points) > debounce_time_points and warn:
-                    if max(incorrect_points.values()) > max_points_incorrect:
-                        play_audio(audio_high)
-
-                    debounce_points = time.time()
-                    low_warn_dobounce = time.time()
-                    incorrect_points = {}
-                    warn = False'''
+                        low_warn_dobounce = time.time()
+                        incorrect_points = {}
+                        warn = False'''
         
         if accuracy_history:
             accuracy_history = accuracy_history[-PLOT_COUNT_THRESHOLD:]
@@ -466,7 +466,7 @@ if __name__ == "__main__":
                 new_h = int(orig_h * scale)
 
                 resized_frame = cv2.resize(cropped_frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                padded_frame = np.zeros((target_h, target_w, 3), dtype=np.uint8)
+                padded_frame = np.ones((target_h, target_w, 3), dtype=np.uint8) * 255
 
                 x_offset = (target_w - new_w) // 2
                 y_offset = (target_h - new_h) // 2
