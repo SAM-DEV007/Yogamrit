@@ -157,7 +157,7 @@ if __name__ == "__main__":
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
-    cap = cv2.VideoCapture(t7)
+    cap = cv2.VideoCapture(t3_1)
     #cap = cv2.VideoCapture(0)
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
