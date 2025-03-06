@@ -87,8 +87,8 @@ if __name__ == "__main__":
 
     t7 = str(video_folder / 'Bhujangasana/1_B.mp4')
 
-    audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
-    audio_high = str(audio_folder / 'High_Error_Beep.mp3')
+    #audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
+    #audio_high = str(audio_folder / 'High_Error_Beep.mp3')
 
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     pose = mp_pose.Pose(enable_segmentation=False, model_complexity=1, min_detection_confidence=0.3, min_tracking_confidence=0.3)
 
 
-    ANGLE_THRESHOLD = 10
+    ANGLE_THRESHOLD = 15
     INCORRECT = 0
     FRAME_COUNT = 0
     MIN_INCORRECT = 3
@@ -123,14 +123,14 @@ if __name__ == "__main__":
     prev_text = None
     perform_detect = True
 
-    audio_perm = True
+    '''audio_perm = True
     incorrect_points = {}
     debounce_time_points = 5
     debounce_points = 0
     max_points_incorrect = debounce_time_points * 5
     low_warn_dobounce = 0
     low_warn_debounce_time = 2
-    warn = False
+    warn = False'''
 
     show_all_points = True
 
@@ -238,22 +238,21 @@ if __name__ == "__main__":
 
                     INCORRECT += 1
 
-                    if audio_perm:
+                    '''if audio_perm:
                         if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
                             if i not in incorrect_points:
                                 incorrect_points[i] = 1
                             else:
-                                incorrect_points[i] += 1
+                                incorrect_points[i] += 1'''
             
-            if audio_perm:
+            '''if audio_perm:
                 if incorrect_points and not warn:
                     if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
                         play_audio(audio_low)
 
                         debounce_points = time.time()
                         warn = True
-            
-            if audio_perm:
+
                 if (time.time() - debounce_points) > debounce_time_points and warn:
                     if max(incorrect_points.values()) > max_points_incorrect:
                         play_audio(audio_high)
@@ -261,7 +260,7 @@ if __name__ == "__main__":
                     debounce_points = time.time()
                     low_warn_dobounce = time.time()
                     incorrect_points = {}
-                    warn = False
+                    warn = False'''
         
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
             actual_incorrect = INCORRECT / FRAME_COUNT
@@ -276,27 +275,27 @@ if __name__ == "__main__":
 
         if prev_text:
             cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
-        cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
-        cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
-        cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
-        cv2.putText(frame, f'Show all points: {show_all_points}', (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
+        #cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
+        #cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
+        #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
+        #cv2.putText(frame, f'Show all points: {show_all_points} (P)', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Video', frame)
 
         end = cv2.waitKey(1)
-        if end & 0xFF == ord('a'):
-            audio_perm = not audio_perm
-            if audio_perm:
-                incorrect_points = {}
-                debounce_points = 0
-                low_warn_dobounce = 0
-                warn = False
-        elif end & 0xFF == ord('q'):
+        if end & 0xFF == ord('q'):
             break
         elif end & 0xFF == ord('p'):
             show_all_points = not show_all_points
         elif end == 27:
             break
+        '''elif end & 0xFF == ord('a'):
+            audio_perm = not audio_perm
+            if audio_perm:
+                incorrect_points = {}
+                debounce_points = 0
+                low_warn_dobounce = 0
+                warn = False'''
 
         if cv2.getWindowProperty('Video', cv2.WND_PROP_VISIBLE) < 1:
             break
