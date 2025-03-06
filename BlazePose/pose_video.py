@@ -157,7 +157,7 @@ if __name__ == "__main__":
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
-    cap = cv2.VideoCapture(t3_1)
+    cap = cv2.VideoCapture(t7)
     #cap = cv2.VideoCapture(0)
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
@@ -170,6 +170,9 @@ if __name__ == "__main__":
     mp_drawing = mp.solutions.drawing_utils
     pose = mp_pose.Pose(enable_segmentation=False, model_complexity=1, min_detection_confidence=0.3, min_tracking_confidence=0.3)
 
+    min_x, max_x, min_y, max_y = 0, 0, 0, 0
+    PADDING_CROP = 100
+    AUTOMATIC_CROP = False
 
     ANGLE_THRESHOLD = 15
     INCORRECT_ANGLE_THRESHOLD = 30
@@ -253,6 +256,19 @@ if __name__ == "__main__":
                     points_new_coll[index_pose] = np.array((landmark.x, landmark.y))
             points_new_coll[-1] = (np.array(((points_new_coll[9][0] + points_new_coll[10][0]) / 2, (points_new_coll[9][1] + points_new_coll[10][1]) / 2)))
 
+            points_new_coll = np.array(points_new_coll)
+            if AUTOMATIC_CROP:
+                min_x = round(np.min(points_new_coll[:, 0]) * width, -2)
+                max_x = round(np.max(points_new_coll[:, 0]) * width, -2)
+                min_y = round(np.min(points_new_coll[:, 1]) * height, -2)
+                max_y = round(np.max(points_new_coll[:, 1]) * height, -2)
+
+                if abs(min_x - max_x) > 50 and abs(min_y - max_y) > 50:
+                    min_x = max(min_x - PADDING_CROP, 0)
+                    max_x = min(max_x + PADDING_CROP, width)
+                    min_y = max(min_y - PADDING_CROP, 0)
+                    max_y = min(max_y + PADDING_CROP, height)
+
             if perform_detect:
                 perform_detect = False
 
@@ -260,7 +276,7 @@ if __name__ == "__main__":
                 predict_model = np.squeeze(model.predict(np.array([norm]), verbose=0))
                 prediction = np.argmax(predict_model)
                 
-                if predict_model[prediction] > PREDICT_THRESHOLD:
+                if predict_model[prediction] >= PREDICT_THRESHOLD:
                     _predict = prediction
 
                 if _predict:
@@ -436,6 +452,28 @@ if __name__ == "__main__":
         #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.putText(frame, f'Show all points: {show_all_points} (P)', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
+        if AUTOMATIC_CROP:
+            if abs(min_x - max_x) > 0 and abs(min_y - max_y) > 0:
+                cropped_frame = frame[int(min_y):int(max_y), int(min_x):int(max_x)]
+
+
+                orig_h, orig_w = cropped_frame.shape[:2]
+                target_w, target_h = width, height
+
+                scale = min(target_w / orig_w, target_h / orig_h)
+
+                new_w = int(orig_w * scale)
+                new_h = int(orig_h * scale)
+
+                resized_frame = cv2.resize(cropped_frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                padded_frame = np.zeros((target_h, target_w, 3), dtype=np.uint8)
+
+                x_offset = (target_w - new_w) // 2
+                y_offset = (target_h - new_h) // 2
+
+                padded_frame[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_frame
+                frame = padded_frame
+
         cv2.imshow('Video', frame)
 
         end = cv2.waitKey(1)
@@ -445,6 +483,8 @@ if __name__ == "__main__":
             show_all_points = not show_all_points
         elif end == 27:
             break
+        elif end & 0xFF == ord('z'):
+            AUTOMATIC_CROP = not AUTOMATIC_CROP
         '''elif end & 0xFF == ord('a'):
             audio_perm = not audio_perm
             if audio_perm:
