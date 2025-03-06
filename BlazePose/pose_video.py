@@ -72,7 +72,7 @@ def play_audio(audio_file):
 
 if __name__ == "__main__":
     correction_folder = Path(__file__).resolve().parent / 'Correction_Data'
-    video_folder = Path(__file__).resolve().parent / 'Tests/Video'
+    video_folder = Path(__file__).resolve().parent.parent / 'Tests/Video'
     audio_folder = Path(__file__).resolve().parent / 'Audio'
 
     v1 = str(video_folder / 'Hasta Uttanasan/1_HU.mp4')
@@ -98,8 +98,8 @@ if __name__ == "__main__":
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
 
-    cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    #cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
+    #cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 
     mp_pose = mp.solutions.pose
