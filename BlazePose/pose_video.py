@@ -77,6 +77,7 @@ def calculate_accuracy(accuracy_history, weight=0.1):
 
 
 def create_pie_chart(accuracy_history):
+    plt.tight_layout()
     accuracy_history = np.array(accuracy_history)
 
     red_sum = np.sum(accuracy_history[:, 1])
@@ -106,6 +107,7 @@ def create_pie_chart(accuracy_history):
 
 
 def create_line_plot(accuracy):
+    plt.tight_layout()
     plt.plot(accuracy)
     plt.title('Accuracy')
 
