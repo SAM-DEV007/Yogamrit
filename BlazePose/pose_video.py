@@ -93,7 +93,7 @@ if __name__ == "__main__":
     model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
     model = load_model(model_data)
 
-    cap = cv2.VideoCapture(t3_2)
+    cap = cv2.VideoCapture(t3_1)
     #cap = cv2.VideoCapture(0)
     #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
     #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
@@ -108,6 +108,7 @@ if __name__ == "__main__":
 
 
     ANGLE_THRESHOLD = 15
+    INCORRECT_ANGLE_THRESHOLD = 50
     INCORRECT = 0
     FRAME_COUNT = 0
     MIN_INCORRECT = 3
@@ -191,7 +192,7 @@ if __name__ == "__main__":
             points_flip = data_flip[prev_text][1:-1]
 
             for i in range(2, len(points_new) - 2):
-                clr = (255, 0, 0)
+                clr = (0, 255, 0) # Green
                 
                 angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + 2]))
                 angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + 2]))
@@ -204,7 +205,12 @@ if __name__ == "__main__":
                     frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), clr, 1)
 
                 if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                    clr = (0, 0, 255)
+                    min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
+
+                    if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
+                        clr = (0, 0, 255) # Red
+                    else:
+                        clr = (0, 255, 255) # Yellow
 
                     frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
                     frame = cv2.circle(frame, (int(points_new[i + 2][0] * frame.shape[1]), int(points_new[i + 2][1] * frame.shape[0])), 4, clr, -1)
@@ -221,7 +227,7 @@ if __name__ == "__main__":
                         frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
 
                     if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                        clr = (0, 0, 255)
+                        #clr = (0, 0, 255)
 
                         frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
                         frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
