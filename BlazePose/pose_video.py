@@ -198,10 +198,9 @@ if __name__ == "__main__":
             points_flip = data_flip[prev_text][1:-1]
 
             for i in range(2, len(points_new) - 2):
+                av = 2
                 if i == 6 or i == 8:
                     av = 1
-                else:
-                    av = 2
 
                 clr = (0, 255, 0) # Green
                 
