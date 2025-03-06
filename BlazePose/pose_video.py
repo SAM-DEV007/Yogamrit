@@ -432,7 +432,11 @@ if __name__ == "__main__":
                 new_w = int(orig_w * scale)
                 new_h = int(orig_h * scale)
 
-                padded_size = 300
+                text_w = 0
+                if prev_text:
+                    (text_w, _), _ = cv2.getTextSize(prev_text, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
+
+                padded_size = max(text_w, 200)
 
                 final_w = max(target_w, new_w + padded_size)
 
