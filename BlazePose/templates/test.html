@@ -1,271 +1,247 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>YOGAMRIT UI</title>
-<style>
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOGAMRIT UI</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+        .video-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .header {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 5px;
+            z-index: 10;
+        }
+        #logo-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 5px;
+            z-index: 100;
+        }
 
-#wrapper {
-  position: absolute;
-  width: 96.5vw;
-  height: 91vh;
-  border: 30px solid black;
-}
+        /*#logo-container div {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }*/
 
-#camera-feed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -2;
-}
+        #logo-container img {
+            max-width: 100px;
+            height: auto;
+            display: block;
+        }
+        
+        /* Asana Information Box */
+        .asana-info {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            width: 200px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .asana-info-header {
+            background-color: #333;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .asana-name {
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.7em;
+            background-color: white;
+        }
+        .insights {
+            padding: 10px 15px;
+            background-color: #eee;
+        }
+        .textbook {
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+            background-color: white;
+        }
+        
+        /* Strictness Level Box */
+        .strictness-box {
+            position: absolute;
+            top: 400px;
+            left: 20px;
+            width: 200px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .strictness-header {
+            background-color: #333;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .strictness-level {
+            height: 80px;
+            background-color: #ddd;
+        }
+        
+        /* Accuracy Box */
+        .accuracy-box {
+            position: absolute;
+            top: 540px;
+            left: 20px;
+            width: 200px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .accuracy-header {
+            background-color: #333;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .accuracy-level {
+            height: 80px;
+            background-color: #ddd;
+        }
+        
+        /* Sidebar Content */
+        .sidebar {
+            position: absolute;
+            top: 200px;
+            right: 20px;
+            width: 280px;
+            background-color: rgba(40, 40, 40, 0.9);
+            color: white;
+            border-radius: 5px;
+            padding: 35px;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+        .sidebar-image {
+            width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+        
+        /* Control Buttons */
+        #toggle-container {
+            position: absolute;
+            bottom: 40px;
+            right: 30px;
+            z-index: 1;
+            pointer-events: auto;
+        }
 
-#overlay-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-#asana-name-container {
-  position: absolute;
-  top: 80px;
-  left: 60px;
-  pointer-events: auto;
-}
-
-.asana-name-button {
-    background-color: rgba(128, 128, 128, 0.5);
-    padding: 10px;
-    border-radius: 5px;
-    color: white;
-    cursor: pointer;
-}
-
-.insights-dropdown {
-  display: none;
-  position: absolute;
-  background-color: white;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-}
-
-.insights-dropdown h3{
-    padding: 10px;
-    margin: 0;
-    background-color: lightgrey;
-}
-
-.insights-dropdown a {
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-}
-
-.insights-dropdown a:hover {background-color: #f1f1f1;}
-
-#asana-name-container:hover .insights-dropdown {display: block;}
-
-#logo-container {
-  position: absolute;
-  top: 40px;
-  right: 30px;
-  text-align: right;
-  color: white;
-  pointer-events: auto;
-}
-
-#logo-container img {
-  max-width: 100px;
-  height: auto;
-  display: block;
-  margin-top: 5px;
-}
-
-#asana-accuracy-container, #level-strictness-container {
-  position: fixed;
-  left: 60px;
-  background-color: rgba(128, 128, 128, 0.5);
-  padding: 10px;
-  border-radius: 5px;
-  color: white;
-  z-index: 1;
-  pointer-events: auto;
-}
-
-#asana-accuracy-container {
-  bottom: 160px;
-}
-
-#level-strictness-container {
-  bottom: 300px;
-}
-
-.animation-container {
-  position: absolute;
-  left: 60px;
-  width: 100px;
-  height: 100px;
-  background-color: lightgray;
-  z-index: 1;
-  pointer-events: auto;
-}
-
-#asana-animation {
-  bottom: 60px;
-}
-
-#level-animation {
-  bottom: 200px;
-}
-
-#arrow-container {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  cursor: pointer;
-  z-index: 3;
-  pointer-events: auto;
-}
-
-#arrow-image {
-  width: 30px;
-  height: auto;
-}
-
-#sidebar {
-  position: absolute;
-  top: 50%;
-  right: -300px;
-  width: 300px;
-  height: auto;
-  background-color: rgba(0, 0, 0, 0.8);
-  transition: right 0.3s ease-in-out;
-  color: white;
-  padding: 20px;
-  box-sizing: border-box;
-  transform: translateY(-50%);
-  z-index: 2;
-  pointer-events: auto;
-}
-
-#sidebar.open {
-  right: 0;
-}
-
-#toggle-container {
-  position: absolute;
-  bottom: 40px;
-  right: 30px;
-  z-index: 1;
-  pointer-events: auto;
-}
-
-.toggle-button {
-  background-color: rgba(128, 128, 128, 0.5);
-  padding: 10px;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  margin-left: 5px;
-}
-
-</style>
+        .toggle-button {
+            background-color: rgba(128, 128, 128, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+    </style>
 </head>
 <body>
-
-  <div id="wrapper">
-    <img id="camera-feed" src="{{ url_for('video_feed') }}">
-    <div id="overlay-container">
-      <div id="asana-name-container">
-        <div class="asana-name-button" id="asana-name">Loading...</div>
-        <div class="insights-dropdown">
-          <h3>Insights</h3>
-          <a href="#">Textbook 1</a>
-          <a href="#">Textbook 2</a>
-          <a href="#">Textbook 3</a>
+    <div class="container">
+        <div class="video-container">
+            <img src="{{ url_for('video_feed') }}" class="video-feed">
         </div>
-      </div>
-
-      <div id="logo-container">
-        <div>YOGAMRIT</div>
-        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
-      </div>
-
-      <div id="asana-accuracy-container">Asana Accuracy</div>
-      <div id="level-strictness-container">Level of strictness</div>
-
-      <div class="animation-container" id="asana-animation"></div>
-      <div class="animation-container" id="level-animation"></div>
-
-      <div id="arrow-container" onclick="toggleSidebar()">
-        <img id="arrow-image" src="{{ url_for('static', filename='arrow.png') }}" alt="Arrow">
-      </div>
-
-      <div id="toggle-container">
-        <button class="toggle-button">Mute</button>
-        <button class="toggle-button">Detect Asana</button>
-      </div>
-    </div>
-
-    <div id="sidebar">
-      <h2>Sidebar Content</h2>
-      <p>This is the sidebar content. Add your image or other information here.</p>
-      <img src="{{ url_for('static', filename='sidebar-image.jpg') }}" alt="Sidebar Image">
-    </div>
-  </div>
-
-  <script>
-    function updateAsanaName() {
-      fetch('/asana_name')  // Fetch latest asana name
-      .then(response => response.json())
-      .then(data => {
-          document.getElementById('asana-name').textContent = data.asana;  // Update UI
-      })
-      .catch(error => console.error('Error fetching asana name:', error));
-  }
-  
-  // Update asana name every second
-  setInterval(updateAsanaName, 1000);
-    /*async function initCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const video = document.getElementById('camera-feed');
-        video.srcObject = stream;
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-      }
-    }
-
-    initCamera();
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('open');
-    }
-
-    document.querySelectorALL(".toggle-button")[0].addEventListener("click", function() {
-        fetch("/toggle-audio", { method: "POST" })
+        
+        <!-- Logo -->
+        <div id="logo-container">
             
-            .then(data => {
-                this.textContent = data.audio_perm ? "Mute" : "Unmute";
-            })
-            .then(response => response.json());
-    });*/
-  </script>
-
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
+        </div>
+        
+        <!-- Asana Information Box -->
+        <div class="asana-info">
+            <div class="asana-info-header">Name of the asana</div>
+            <div class="asana-name" id="current-asana">Loading...</div>
+            <div class="insights">Insights</div>
+            <div class="textbook">Textbook 1</div>
+            <div class="textbook">Textbook 2</div>
+        </div>
+        
+        <!-- Strictness Level Box -->
+        <div class="strictness-box">
+            <div class="strictness-header">Level of strictness</div>
+        </div>
+        
+        <!-- Asana Accuracy Box -->
+        <div class="accuracy-box">
+            <div class="accuracy-header">Asana Accuracy</div>
+        </div>
+        
+        <!-- Sidebar Content -->
+        <div class="sidebar">
+            <h2>Sidebar Content</h2>
+            <p>This is the sidebar content. Add your image or other information here.</p>
+            <img src="https://via.placeholder.com/250x150" alt="Sidebar Image" class="sidebar-image">
+        </div>
+        
+        <div id="toggle-container">
+            <button class="toggle-button">Mute</button>
+            <button class="toggle-button">Detect Asana</button>
+        </div>
+    </div>
+    
+    <script>
+        // Function to update asana name
+        function updateAsanaName() {
+            fetch('/asana_name')
+                .then(response => response.json())
+                .then(data => {
+                    const asanaName = document.getElementById('current-asana');
+                    if (data.asana) {
+                        asanaName.textContent = data.asana;
+                    } else {
+                        asanaName.textContent = "No asana detected";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching asana name:', error);
+                });
+        }
+        
+        // Update asana name every second
+        setInterval(updateAsanaName, 1000);
+        
+        // Initial call
+        updateAsanaName();
+    </script>
 </body>
 </html>
