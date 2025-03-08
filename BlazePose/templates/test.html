@@ -188,11 +188,10 @@ body {
 <body>
 
   <div id="wrapper">
-     <img src="{{ url_for('calc') }}">
-
+    <img id="camera-feed" src="{{ url_for('video_feed') }}">
     <div id="overlay-container">
       <div id="asana-name-container">
-        <div class="asana-name-button">Name of the asana</div>
+        <div class="asana-name-button" id="asana-name">Loading...</div>
         <div class="insights-dropdown">
           <h3>Insights</h3>
           <a href="#">Textbook 1</a>
@@ -203,7 +202,7 @@ body {
 
       <div id="logo-container">
         <div>YOGAMRIT</div>
-        <img src="logo.jpg">
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
       </div>
 
       <div id="asana-accuracy-container">Asana Accuracy</div>
@@ -213,11 +212,11 @@ body {
       <div class="animation-container" id="level-animation"></div>
 
       <div id="arrow-container" onclick="toggleSidebar()">
-        <img id="arrow-image" src="arrow.png" alt="Arrow">
+        <img id="arrow-image" src="{{ url_for('static', filename='arrow.png') }}" alt="Arrow">
       </div>
 
       <div id="toggle-container">
-        <button class="toggle-button">Audio</button>
+        <button class="toggle-button">Mute</button>
         <button class="toggle-button">Detect Asana</button>
       </div>
     </div>
@@ -225,12 +224,23 @@ body {
     <div id="sidebar">
       <h2>Sidebar Content</h2>
       <p>This is the sidebar content. Add your image or other information here.</p>
-      <img src="sidebar-image.jpg" alt="Sidebar Image" style="max-width: 100%;">
+      <img src="{{ url_for('static', filename='sidebar-image.jpg') }}" alt="Sidebar Image">
     </div>
   </div>
 
   <script>
-    async function initCamera() {
+    function updateAsanaName() {
+      fetch('/asana_name')  // Fetch latest asana name
+      .then(response => response.json())
+      .then(data => {
+          document.getElementById('asana-name').textContent = data.asana;  // Update UI
+      })
+      .catch(error => console.error('Error fetching asana name:', error));
+  }
+  
+  // Update asana name every second
+  setInterval(updateAsanaName, 1000);
+    /*async function initCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         const video = document.getElementById('camera-feed');
@@ -246,6 +256,15 @@ body {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('open');
     }
+
+    document.querySelectorALL(".toggle-button")[0].addEventListener("click", function() {
+        fetch("/toggle-audio", { method: "POST" })
+            
+            .then(data => {
+                this.textContent = data.audio_perm ? "Mute" : "Unmute";
+            })
+            .then(response => response.json());
+    });*/
   </script>
 
 </body>
