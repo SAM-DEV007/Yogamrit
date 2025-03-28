@@ -154,7 +154,7 @@ if __name__ == "__main__":
     #audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
     #audio_high = str(audio_folder / 'High_Error_Beep.mp3')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v6.keras')
+    model_data = str(Path(__file__).resolve().parent / 'Model/model_v7.keras')
     model = load_model(model_data)
 
     cap = cv2.VideoCapture(t3_1)
@@ -195,6 +195,7 @@ if __name__ == "__main__":
     DEBOUNCE_TIME = 1
     debounce = 0
     prev_text = None
+    prev_accuracy = None
     perform_detect = True
 
     accuracy_history = []
@@ -280,6 +281,7 @@ if __name__ == "__main__":
 
                 if _predict:
                     prev_text = predictions[_predict]
+                    prev_accuracy = predict_model[prediction]
 
             if prev_text:
                 points_new = points_new_coll[1:-1]
@@ -474,7 +476,7 @@ if __name__ == "__main__":
             frame[pie_y:pie_y+new_pie_height, pie_x:pie_x+PLOT_SIZE] = pie_resized
 
         if prev_text:
-            cv2.putText(frame, prev_text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
+            cv2.putText(frame, f'{prev_text} ({round((prev_accuracy * 100), 2)}%)', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         if accuracy:
             cv2.putText(frame, f'Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
