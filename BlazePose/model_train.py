@@ -1,5 +1,5 @@
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import Input, Dense, Dropout, BatchNormalization
+from tensorflow.keras.layers import Input, Dense, Dropout, BatchNormalization # type: ignore
 from matplotlib import pyplot as plt
 
 from pathlib import Path
