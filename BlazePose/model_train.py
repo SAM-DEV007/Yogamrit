@@ -12,10 +12,10 @@ import os
 
 
 if __name__ == "__main__":
-    dataset = str(Path(__file__).resolve().parent / 'Data/data_v6.csv')
+    dataset = str(Path(__file__).resolve().parent / 'Data/data_v7.csv')
     model_dir = str(Path(__file__).resolve().parent / 'Model')
 
-    model_save = os.path.join(model_dir, 'model_v6.keras')
+    model_save = os.path.join(model_dir, 'model_v7.keras')
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -87,3 +87,13 @@ if __name__ == "__main__":
 
     cm_display.plot()
     plt.savefig(str(Path(__file__).resolve().parent / 'Model/confusion_matrix.png'))
+
+    accuracy = metrics.accuracy_score(actual, predicted)
+    precision = metrics.precision_score(actual, predicted, average='weighted')
+    recall = metrics.recall_score(actual, predicted, average='weighted')
+    f1 = metrics.f1_score(actual, predicted, average='weighted')
+
+    print(f"Accuracy: {accuracy}")
+    print(f"Precision: {precision}")
+    print(f"Recall: {recall}")
+    print(f"F1 Score: {f1}")
