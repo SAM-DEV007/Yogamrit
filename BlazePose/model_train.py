@@ -9,6 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 import os
+import pandas as pd
 
 
 if __name__ == "__main__":
@@ -19,6 +20,12 @@ if __name__ == "__main__":
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
+
+    df = pd.read_csv(dataset, delimiter=',', header=None)
+    counts = df[0].value_counts()
+
+    print("Class distribution:")
+    print(counts)
     
     x = np.loadtxt(dataset, delimiter=',', dtype='float32', usecols=list(range(1, (18 * 2) + 1)))
     y = np.loadtxt(dataset, delimiter=',', dtype='int32', usecols=0)
