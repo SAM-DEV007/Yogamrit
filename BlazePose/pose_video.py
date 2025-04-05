@@ -154,7 +154,7 @@ if __name__ == "__main__":
     #audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
     #audio_high = str(audio_folder / 'High_Error_Beep.mp3')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v7.keras')
+    model_data = str(Path(__file__).resolve().parent / 'Model/model_v8.keras')
     model = load_model(model_data)
 
     cap = cv2.VideoCapture(t3_1)
@@ -276,14 +276,18 @@ if __name__ == "__main__":
                 predict_model = np.squeeze(model.predict(np.array([norm]), verbose=0))
                 prediction = np.argmax(predict_model)
                 
-                if predict_model[prediction] >= PREDICT_THRESHOLD:
-                    _predict = prediction
+                if prediction != 7: # NoAsana
+                    if predict_model[prediction] >= PREDICT_THRESHOLD:
+                        _predict = prediction
 
-                if _predict:
-                    prev_text = predictions[_predict]
+                    if _predict:
+                        prev_text = predictions[_predict]
+                        prev_accuracy = predict_model[prediction]
+                else:
+                    prev_text = 'No Asana'
                     prev_accuracy = predict_model[prediction]
 
-            if prev_text:
+            if prev_text and prev_text != 'No Asana':
                 points_new = points_new_coll[1:-1]
                 points = data[prev_text][1:-1]
                 points_flip = data_flip[prev_text][1:-1]
@@ -478,7 +482,7 @@ if __name__ == "__main__":
         if prev_text:
             cv2.putText(frame, f'{prev_text} ({round((prev_accuracy * 100), 2)}%)', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         if accuracy:
-            cv2.putText(frame, f'Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
+            cv2.putText(frame, f'Asana Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
