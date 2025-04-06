@@ -34,8 +34,8 @@ if __name__ == "__main__":
 
     model = tf.keras.models.Sequential([
         Input(shape=(18 * 2,)),
-        Dense(30, activation='relu'),
-        Dropout(0.4),
+        Dense(25, activation='relu'),
+        Dropout(0.2),
         BatchNormalization(),
         Dense(15, activation='relu'),
         BatchNormalization(),
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         x_train,
         y_train,
         epochs=20,
-        batch_size=32,
+        batch_size=16,
         validation_data=(x_test, y_test),
         callbacks=[cp_callback, es_callback]
     )
