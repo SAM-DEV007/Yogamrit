@@ -482,7 +482,7 @@ if __name__ == "__main__":
         if prev_text:
             cv2.putText(frame, f'{prev_text} ({round((prev_accuracy * 100), 2)}%)', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         if accuracy:
-            cv2.putText(frame, f'Asana Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
+            cv2.putText(frame, f'Asana Avg. Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
         #cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
