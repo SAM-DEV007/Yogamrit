@@ -13,10 +13,10 @@ import pandas as pd
 
 
 if __name__ == "__main__":
-    dataset = str(Path(__file__).resolve().parent / 'Data/data_v8.csv')
+    dataset = str(Path(__file__).resolve().parent / 'Data/data_v9.csv')
     model_dir = str(Path(__file__).resolve().parent / 'Model')
 
-    model_save = os.path.join(model_dir, 'model_v8.keras')
+    model_save = os.path.join(model_dir, 'model_v9.keras')
 
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)

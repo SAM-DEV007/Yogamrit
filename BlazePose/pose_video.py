@@ -154,7 +154,7 @@ if __name__ == "__main__":
     #audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
     #audio_high = str(audio_folder / 'High_Error_Beep.mp3')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v8.keras')
+    model_data = str(Path(__file__).resolve().parent / 'Model/model_v9.keras')
     model = load_model(model_data)
 
     cap = cv2.VideoCapture(t3_1)
