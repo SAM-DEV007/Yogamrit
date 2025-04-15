@@ -66,9 +66,9 @@ def landmark_list(frame, pose):
     return preprocess_data(landmarks)
 
 
-def play_audio(audio_file):
-    new_thread = threading.Thread(target=playsound, args=(audio_file,))
-    new_thread.start()
+# def play_audio(audio_file):
+#     new_thread = threading.Thread(target=playsound, args=(audio_file,))
+#     new_thread.start()
 
 
 def calculate_accuracy(accuracy_history, weight=0.1):
@@ -136,7 +136,7 @@ def create_line_plot(accuracy):
 
 if __name__ == "__main__":
     correction_folder = Path(__file__).resolve().parent / 'Correction_Data'
-    video_folder = Path(__file__).resolve().parent.parent / 'Tests/Video'
+    video_folder = Path(__file__).resolve().parent / 'Tests/Video'
     audio_folder = Path(__file__).resolve().parent / 'Audio'
 
     v1 = str(video_folder / 'Hasta Uttanasan/1_HU.mp4')
