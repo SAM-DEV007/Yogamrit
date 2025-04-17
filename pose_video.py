@@ -4,12 +4,15 @@ import time
 import itertools
 import csv
 import ast
+import torch
+import joblib
 import threading
 
 import mediapipe as mp
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+import torch.nn as nn
 
 from tensorflow.keras.models import load_model # type: ignore
 from pathlib import Path
@@ -134,6 +137,81 @@ def create_line_plot(accuracy):
     return plot
 
 
+class LSTMClassifier(nn.Module):
+    def __init__(self, input_size, hidden_size, num_classes, num_layers):
+        super().__init__()
+
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        # x shape: (batch, seq_len, input_size)
+        out, _ = self.lstm(x)  # out: (batch, seq_len, hidden_size)
+        out = out[:, -1, :]    # Take output of last time step
+        out = self.fc(out)
+        out = torch.softmax(out, dim=1)
+        return out
+
+
+class Model:
+    def __init__(self, model_path):
+        self.model_path = model_path
+        self.device = None
+        self.type = None
+        self.model = None
+
+
+    def set_type(self):
+        match self.model_path:
+            case str() if self.model_path.endswith('.keras'):
+                self.type = 'tf'
+            case str() if self.model_path.endswith('.pth'):
+                self.type = 'torch'
+                self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            case str() if self.model_path.endswith('.pkl'):
+                self.type = 'sklearn'
+            case _:
+                raise ValueError("Unsupported model file type.")
+    
+
+    def load_model(self):
+        if self.set_type is None:
+            raise ValueError("Model type not set. Please call set_type() first.")
+        
+        match self.type:
+            case 'tf':
+                self.model = load_model(self.model_path)
+            case 'torch':
+                if self.device is None:
+                    raise ValueError("Device not set. Please call set_type() first.")
+                
+                self.model = LSTMClassifier(input_size=36, hidden_size=16, num_classes=8, num_layers=1).to(self.device)
+                self.model.load_state_dict(torch.load(self.model_path, weights_only=True))
+                self.model.eval()
+            case 'sklearn':
+                self.model = joblib.load(self.model_path)
+    
+
+    def predict(self, data):
+        if self.type is None:
+            raise ValueError("Model type not set. Please call set_type() first.")
+
+        match self.type:
+            case 'tf':
+                predict_model = self.model.predict(data, verbose=0)
+                return np.squeeze(predict_model), np.argmax(predict_model, axis=1)[0]
+            case 'torch':
+                tensor = data.reshape(-1, 1, 36)
+                tensor = torch.tensor(tensor, dtype=torch.float32).to(self.device)
+
+                with torch.no_grad():
+                    predict_model = self.model(tensor)
+                    return np.squeeze(np.array(predict_model)), torch.argmax(predict_model, dim=1).item()
+            case 'sklearn':
+                predict_model = self.model.predict_proba(data)
+                return np.squeeze(predict_model), np.argmax(self.model.predict_proba(data), axis=1)[0]
+
+
 if __name__ == "__main__":
     correction_folder = Path(__file__).resolve().parent / 'Correction_Data'
     video_folder = Path(__file__).resolve().parent / 'Tests/Video'
@@ -154,8 +232,14 @@ if __name__ == "__main__":
     #audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
     #audio_high = str(audio_folder / 'High_Error_Beep.mp3')
 
-    model_data = str(Path(__file__).resolve().parent / 'Model/model_v9.keras')
-    model = load_model(model_data)
+    '''model_data = str(Path(__file__).resolve().parent / 'Model/model_v9.keras')
+    model = load_model(model_data)'''
+
+    model_name = 'DNN_Model.keras'
+    model_data = str(Path(__file__).resolve().parent / f'Model/FinalModels/{model_name}')
+    model = Model(model_data)
+    model.set_type()
+    model.load_model()
 
     cap = cv2.VideoCapture(t3_1)
     #cap = cv2.VideoCapture(0)
@@ -273,8 +357,7 @@ if __name__ == "__main__":
                 perform_detect = False
 
                 norm = landmark_list(frame, points_new_coll)
-                predict_model = np.squeeze(model.predict(np.array([norm]), verbose=0))
-                prediction = np.argmax(predict_model)
+                predict_model, prediction = model.predict(np.array([norm]))
                 
                 if prediction != 7: # NoAsana
                     if predict_model[prediction] >= PREDICT_THRESHOLD:
