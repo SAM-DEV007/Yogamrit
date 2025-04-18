@@ -363,7 +363,7 @@ if __name__ == "__main__":
                     if predict_model[prediction] >= PREDICT_THRESHOLD:
                         _predict = prediction
 
-                    if _predict:
+                    if _predict is not None:
                         prev_text = predictions[_predict]
                         prev_accuracy = predict_model[prediction]
                 else:
