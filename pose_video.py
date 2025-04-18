@@ -257,7 +257,7 @@ if __name__ == "__main__":
 
     mp_pose = mp.solutions.pose
     mp_drawing = mp.solutions.drawing_utils
-    pose = mp_pose.Pose(enable_segmentation=False, model_complexity=1, min_detection_confidence=0.3, min_tracking_confidence=0.3)
+    pose = mp_pose.Pose(enable_segmentation=False, model_complexity=1, min_detection_confidence=0.6, min_tracking_confidence=0.5)
 
     min_x, max_x, min_y, max_y = 0, 0, 0, 0
     PADDING_CROP = 100
