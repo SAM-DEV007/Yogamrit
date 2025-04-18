@@ -130,6 +130,31 @@ def create_line_plot(accuracy):
     return plot
 
 
+def landmark_in_frame(landmark):
+    return 0 <= landmark.x <= 1 and 0 <= landmark.y <= 1 and landmark.visibility > 0.4
+
+
+def full_body_in_frame(landmarks):
+    required_indices = [
+        mp_pose.PoseLandmark.RIGHT_WRIST,
+        mp_pose.PoseLandmark.LEFT_WRIST,
+        mp_pose.PoseLandmark.RIGHT_ELBOW,
+        mp_pose.PoseLandmark.LEFT_ELBOW,
+        mp_pose.PoseLandmark.LEFT_SHOULDER,
+        mp_pose.PoseLandmark.RIGHT_SHOULDER,
+        mp_pose.PoseLandmark.LEFT_HIP,
+        mp_pose.PoseLandmark.RIGHT_HIP,
+        mp_pose.PoseLandmark.LEFT_KNEE,
+        mp_pose.PoseLandmark.RIGHT_KNEE,
+        mp_pose.PoseLandmark.LEFT_ANKLE,
+        mp_pose.PoseLandmark.RIGHT_ANKLE,
+    ]
+    
+    return all(
+        landmark_in_frame(landmarks[i]) for i in required_indices
+    )
+
+
 class LSTMClassifier(nn.Module):
     def __init__(self, input_size, hidden_size, num_classes, num_layers):
         super().__init__()
@@ -228,7 +253,7 @@ if __name__ == "__main__":
     model.set_type()
     model.load_model()
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(t3_1)
 
     mp_pose = mp.solutions.pose
     mp_drawing = mp.solutions.drawing_utils
@@ -307,43 +332,47 @@ if __name__ == "__main__":
             perform_detect = True
 
         if results.pose_landmarks:
-            for idx, landmark in enumerate(results.pose_landmarks.landmark):
-                if mp_pose.PoseLandmark(idx).name in poses:
-                    index_pose = poses.index(mp_pose.PoseLandmark(idx).name)
-                    points_new_coll[index_pose] = np.array((landmark.x, landmark.y))
-            points_new_coll[-1] = (np.array(((points_new_coll[9][0] + points_new_coll[10][0]) / 2, (points_new_coll[9][1] + points_new_coll[10][1]) / 2)))
+            if full_body_in_frame(results.pose_landmarks.landmark):
+                for idx, landmark in enumerate(results.pose_landmarks.landmark):
+                    if mp_pose.PoseLandmark(idx).name in poses:
+                        index_pose = poses.index(mp_pose.PoseLandmark(idx).name)
+                        points_new_coll[index_pose] = np.array((landmark.x, landmark.y))
+                points_new_coll[-1] = (np.array(((points_new_coll[9][0] + points_new_coll[10][0]) / 2, (points_new_coll[9][1] + points_new_coll[10][1]) / 2)))
 
-            points_new_coll = np.array(points_new_coll)
-            if AUTOMATIC_CROP:
-                min_x = round(np.min(points_new_coll[:, 0]) * width, -2)
-                max_x = round(np.max(points_new_coll[:, 0]) * width, -2)
-                min_y = round(np.min(points_new_coll[:, 1]) * height, -2)
-                max_y = round(np.max(points_new_coll[:, 1]) * height, -2)
+                points_new_coll = np.array(points_new_coll)
+                if AUTOMATIC_CROP:
+                    min_x = round(np.min(points_new_coll[:, 0]) * width, -2)
+                    max_x = round(np.max(points_new_coll[:, 0]) * width, -2)
+                    min_y = round(np.min(points_new_coll[:, 1]) * height, -2)
+                    max_y = round(np.max(points_new_coll[:, 1]) * height, -2)
 
-                if abs(min_x - max_x) > 50 and abs(min_y - max_y) > 50:
-                    min_x = max(min_x - PADDING_CROP, 0)
-                    max_x = min(max_x + PADDING_CROP, width)
-                    min_y = max(min_y - PADDING_CROP, 0)
-                    max_y = min(max_y + PADDING_CROP, height)
+                    if abs(min_x - max_x) > 50 and abs(min_y - max_y) > 50:
+                        min_x = max(min_x - PADDING_CROP, 0)
+                        max_x = min(max_x + PADDING_CROP, width)
+                        min_y = max(min_y - PADDING_CROP, 0)
+                        max_y = min(max_y + PADDING_CROP, height)
 
-            if perform_detect:
-                perform_detect = False
+                if perform_detect:
+                    perform_detect = False
 
-                norm = landmark_list(frame, points_new_coll)
-                predict_model, prediction = model.predict(np.array([norm]))
-                
-                if prediction != 7: # NoAsana
-                    if predict_model[prediction] >= PREDICT_THRESHOLD:
-                        _predict = prediction
+                    norm = landmark_list(frame, points_new_coll)
+                    predict_model, prediction = model.predict(np.array([norm]))
+                    
+                    if prediction != 7: # NoAsana
+                        if predict_model[prediction] >= PREDICT_THRESHOLD:
+                            _predict = prediction
 
-                    if _predict is not None:
-                        prev_text = predictions[_predict]
+                        if _predict is not None:
+                            prev_text = predictions[_predict]
+                            prev_accuracy = predict_model[prediction]
+                    else:
+                        prev_text = 'No Asana'
                         prev_accuracy = predict_model[prediction]
-                else:
-                    prev_text = 'No Asana'
-                    prev_accuracy = predict_model[prediction]
+            else:
+                prev_text = 'No Asana: Partial Body'
+                prev_accuracy = None
 
-            if prev_text and prev_text != 'No Asana':
+            if prev_text and prev_text != 'No Asana' and prev_text != 'No Asana: Partial Body':
                 points_new = points_new_coll[1:-1]
                 points = data[prev_text][1:-1]
                 points_flip = data_flip[prev_text][1:-1]
@@ -478,7 +507,8 @@ if __name__ == "__main__":
             frame[pie_y:pie_y+new_pie_height, pie_x:pie_x+PLOT_SIZE] = pie_resized
 
         if prev_text:
-            cv2.putText(frame, f'{prev_text} ({round((prev_accuracy * 100), 2)}%)', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
+            after_prev = f' ({round(prev_accuracy * 100, 2)}%)' if prev_accuracy else ''
+            cv2.putText(frame, f'{prev_text}{after_prev}', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         if accuracy:
             cv2.putText(frame, f'Asana Avg. Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
 
