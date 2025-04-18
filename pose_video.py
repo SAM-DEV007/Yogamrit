@@ -282,6 +282,7 @@ if __name__ == "__main__":
     prev_accuracy = None
     perform_detect = True
 
+    SHOW_GRAPH = False
     accuracy_history = []
     accuracy = []
 
@@ -539,7 +540,7 @@ if __name__ == "__main__":
                 padded_frame[y_offset:y_offset + new_h, x_offset:x_offset + new_w] = resized_frame
                 frame = padded_frame
 
-        if accuracy_history:
+        if accuracy_history and SHOW_GRAPH:
             accuracy_history = accuracy_history[-PLOT_COUNT_THRESHOLD:]
             accuracy = calculate_accuracy(accuracy_history, weight=WARNING_ACCURACY_THRESHOLD)
 
@@ -582,6 +583,8 @@ if __name__ == "__main__":
             break
         elif end & 0xFF == ord('z'):
             AUTOMATIC_CROP = not AUTOMATIC_CROP
+        elif end & 0xFF == ord('g'):
+            SHOW_GRAPH = not SHOW_GRAPH
         '''elif end & 0xFF == ord('a'):
             audio_perm = not audio_perm
             if audio_perm:
