@@ -6,7 +6,6 @@ import csv
 import ast
 import torch
 import joblib
-import threading
 
 import mediapipe as mp
 import tensorflow as tf
@@ -16,7 +15,6 @@ import torch.nn as nn
 
 from tensorflow.keras.models import load_model # type: ignore
 from pathlib import Path
-from playsound import playsound
 
 
 def calculate_angle(a, b, c):
@@ -67,11 +65,6 @@ def landmark_list(frame, pose):
         landmarks.append([lx, ly])
     
     return preprocess_data(landmarks)
-
-
-# def play_audio(audio_file):
-#     new_thread = threading.Thread(target=playsound, args=(audio_file,))
-#     new_thread.start()
 
 
 def calculate_accuracy(accuracy_history, weight=0.1):
@@ -229,25 +222,13 @@ if __name__ == "__main__":
 
     t7 = str(video_folder / 'Bhujangasana/1_B.mp4')
 
-    #audio_low = str(audio_folder / 'Low_Error_Beep.mp3')
-    #audio_high = str(audio_folder / 'High_Error_Beep.mp3')
-
-    '''model_data = str(Path(__file__).resolve().parent / 'Model/model_v9.keras')
-    model = load_model(model_data)'''
-
     model_name = 'DNN_Model.keras'
     model_data = str(Path(__file__).resolve().parent / f'Model/FinalModels/{model_name}')
     model = Model(model_data)
     model.set_type()
     model.load_model()
 
-    cap = cv2.VideoCapture(t3_1)
-    #cap = cv2.VideoCapture(0)
-    #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 700)
-    #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
-
-    #cv2.namedWindow('Video', cv2.WND_PROP_FULLSCREEN)
-    #cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cap = cv2.VideoCapture(0)
 
     mp_pose = mp.solutions.pose
     mp_drawing = mp.solutions.drawing_utils
@@ -285,15 +266,6 @@ if __name__ == "__main__":
     SHOW_GRAPH = False
     accuracy_history = []
     accuracy = []
-
-    '''audio_perm = True
-    incorrect_points = {}
-    debounce_time_points = 5
-    debounce_points = 0
-    max_points_incorrect = debounce_time_points * 5
-    low_warn_dobounce = 0
-    low_warn_debounce_time = 2
-    warn = False'''
 
     show_all_points = True
 
@@ -407,12 +379,6 @@ if __name__ == "__main__":
                         av = 1
 
                     clr = (0, 255, 0) # Green
-                    
-                    #angle_new = round(calculate_angle(points_new[i - 2], points_new[i], points_new[i + av]))
-                    '''angle_ref = round(calculate_angle(points[i - 2], points[i], points[i + av]))
-                    angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av]))'''
-
-                    #angle = (round(calculate_angle(points[i - 2], points[i], points[i + av])), round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + av])))[use_flip]
 
                     angle_new = new[i - 2]
                     angle = (ref[i - 2], ref_flip[i - 2])[use_flip]
@@ -423,9 +389,7 @@ if __name__ == "__main__":
 
                         frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
 
-                    #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                     if abs(angle_new - angle) > ANGLE_THRESHOLD:
-                        #min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
                         min_dev = abs(angle_new - angle)
 
                         if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
@@ -439,65 +403,16 @@ if __name__ == "__main__":
                         frame = cv2.circle(frame, (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), 4, clr, -1)
 
                         frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i + av][0] * width), int(points_new[i + av][1] * height)), clr, 1)
-                        
-                    '''if i == 6 or i == 8:            
-                        angle_new = calculate_angle(points_new[i - 2], points_new[i], points_new[i + 1])
-                        angle_ref = calculate_angle(points[i - 2], points[i], points[i + 1])
-                        angle_ref_flip = round(calculate_angle(points_flip[i - 2], points_flip[i], points_flip[i + 1]))
-
-                        if show_all_points:
-                            frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
-                            frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
-                            
-                            frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)
-
-                        if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
-                            min_dev = min(abs(angle_new - angle_ref), abs(angle_new - angle_ref_flip))
-
-                            if abs(ANGLE_THRESHOLD - min_dev) > INCORRECT_ANGLE_THRESHOLD:
-                                clr = (0, 0, 255) # Red
-                            else:
-                                clr = (0, 255, 255) # Yellow
-
-                            frame = cv2.circle(frame, (int(points_new[i - 2][0] * frame.shape[1]), int(points_new[i - 2][1] * frame.shape[0])), 4, clr, -1)
-                            frame = cv2.circle(frame, (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), 4, clr, -1)
-                            
-                            frame = cv2.line(frame, (int(points_new[i][0] * frame.shape[1]), int(points_new[i][1] * frame.shape[0])), (int(points_new[i + 1][0] * frame.shape[1]), int(points_new[i + 1][1] * frame.shape[0])), clr, 1)'''
 
                     if show_all_points:
                         frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
                         frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
 
-                    #if abs(angle_new - angle_ref) > ANGLE_THRESHOLD and abs(angle_new - angle_ref_flip) > ANGLE_THRESHOLD:
                     if abs(angle_new - angle) > ANGLE_THRESHOLD:
                         frame = cv2.line(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), (int(points_new[i - 2][0] * width), int(points_new[i - 2][1] * height)), clr, 1)
                         frame = cv2.circle(frame, (int(points_new[i][0] * width), int(points_new[i][1] * height)), 4, clr, -1)
 
                         INCORRECT += 1
-
-                        '''if audio_perm:
-                            if i in range(poses.index('LEFT_WRIST'), poses.index('RIGHT_ANKLE') + 1):
-                                if i not in incorrect_points:
-                                    incorrect_points[i] = 1
-                                else:
-                                    incorrect_points[i] += 1'''
-                
-                '''if audio_perm:
-                    if incorrect_points and not warn:
-                        if (time.time() - low_warn_dobounce) > low_warn_debounce_time:
-                            play_audio(audio_low)
-
-                            debounce_points = time.time()
-                            warn = True
-
-                    if (time.time() - debounce_points) > debounce_time_points and warn:
-                        if max(incorrect_points.values()) > max_points_incorrect:
-                            play_audio(audio_high)
-
-                        debounce_points = time.time()
-                        low_warn_dobounce = time.time()
-                        incorrect_points = {}
-                        warn = False'''
         
         if (time.time() - DEBOUNCE_THRESHOLD) > DEBOUNCE_THRESHOLD_TIME:
             actual_incorrect = INCORRECT / FRAME_COUNT
@@ -533,7 +448,6 @@ if __name__ == "__main__":
                 resized_frame = cv2.resize(cropped_frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
                 padded_frame = np.ones((target_h, final_w, 3), dtype=np.uint8) * 255
 
-                #x_offset = (target_w - new_w) // 2
                 x_offset = padded_size
                 y_offset = (target_h - new_h) // 2
 
@@ -567,10 +481,6 @@ if __name__ == "__main__":
             cv2.putText(frame, f'{prev_text} ({round((prev_accuracy * 100), 2)}%)', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         if accuracy:
             cv2.putText(frame, f'Asana Avg. Accuracy: {round(sum(accuracy) / len(accuracy), 2)}%', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
-        #cv2.putText(frame, f'Next prediction in {DEBOUNCE_TIME - (time.time() - debounce):.2f} sec.', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1, cv2.LINE_AA)
-        #cv2.putText(frame, f'Dynamic Angle Threshold: {ANGLE_THRESHOLD}', (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
-        #cv2.putText(frame, f'Audio: {audio_perm}', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
-        #cv2.putText(frame, f'Show all points: {show_all_points} (P)', (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Video', frame)
 
@@ -585,13 +495,6 @@ if __name__ == "__main__":
             AUTOMATIC_CROP = not AUTOMATIC_CROP
         elif end & 0xFF == ord('g'):
             SHOW_GRAPH = not SHOW_GRAPH
-        '''elif end & 0xFF == ord('a'):
-            audio_perm = not audio_perm
-            if audio_perm:
-                incorrect_points = {}
-                debounce_points = 0
-                low_warn_dobounce = 0
-                warn = False'''
 
         if cv2.getWindowProperty('Video', cv2.WND_PROP_VISIBLE) < 1:
             break
