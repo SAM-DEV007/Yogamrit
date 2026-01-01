@@ -1,0 +1,2 @@
+pose_visualize.py - Save pose correction references
+video_csv.py - Create train dataset
