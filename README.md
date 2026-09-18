@@ -29,8 +29,8 @@ The Python version used for this project is **3.12.10**. It can be said that the
 ### Clone the repository
 Clone this github repository.
 ```sh
-git clone https://github.com/SAM-DEV007/MonoVision.git
-cd MonoVision
+git clone https://github.com/SAM-DEV007/Yogamrit.git
+cd Yogamrit
 ```
 
 If Git is not installed, the repository can be cloned or downloaded by clicking on Code drop-down menu and selecting either Open with Github Desktop (requires Github Desktop installation in the local machine) or Download Zip to download the repository contents.
@@ -98,8 +98,3 @@ The brackets on the plots identify the pair of models being compared, while the 
 For example, DNN vs CNN: `**` indicates that the Accuracy distributions of DNN and CNN differed significantly according to the two-sided Mann–Whitney U test, with an FDR-adjusted p-value below 0.01.
 
 A lack of statistical significance (`p ≥ 0.05`) indicates that the test did not provide sufficient evidence to conclude that the two model distributions differ; it does not necessarily prove that the models are identical.
-
-## Contribution
-1. Samyak Waghdhare
-2. Giridhar Bargaley
-3. Shrishti Singh
